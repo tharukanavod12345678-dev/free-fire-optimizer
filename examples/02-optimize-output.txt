@@ -1,7 +1,9 @@
   [ OK ] Connected: FAKE1234567890
+
 ==========================================================================
-  OPTIMIZE - profile: Safe
+  OPTIMIZE - profile: Full
 ==========================================================================
+
   Phone
   ----------------------------------------------------------------------
    Redmi Note 12 Pro   -   Android 13 (SDK 33)
@@ -10,12 +12,14 @@
    Screen     : 1080x2400 @ 395 dpi   (120 Hz)
    Free Fire  : com.dts.freefireth  v1.106.1
    Free Fire  : com.dts.freefiremax  v2.106.1
+
   Performance right now
   ----------------------------------------------------------------------
    Temperature : 36.8 C   (cool)
    Thermal     : LIGHT
    Frames      : 44.1 fps (estimated from Android frame stats)
    Smoothness  : 21.6 % janky frames
+
   Scanning Android settings (nothing is changed)
   ----------------------------------------------------------------------
    [!!] Per-game performance mode          FPS       default
@@ -25,21 +29,32 @@
    [!!] Background Wi-Fi scanning          Ping      scan_always=1 network_reco=1
    [--] Stop background apps               RAM/FPS   on demand
    [!!] Touch response latency             Aim       long_press=400 multi_press=300
+   [!!] Battery-optimization exemption     FPS       Android may freeze it in background
+   [!!] Game kept in active bucket         FPS       bucket WORKING_SET
+   [!!] Battery saver off while gaming     FPS       battery saver is ON - it caps performance
+   [!!] Refresh-rate lock (opt-in)         FPS       not locked (device peak 120 Hz)
    [!!] ANGLE GLES driver (experimental)   FPS?      native GLES driver
    [!!] Restrict heavy bloat apps          FPS       0/7 restricted
    [!!] Fixed performance mode             FPS       disabled
    [--] Remove bloat apps                  FPS       opt-in (menu 8)
    [--] Lower screen resolution            FPS       native (best quality)
-   OPTIMIZATION SCORE: 0%   (0/8 core tweaks optimal)
+
+   OPTIMIZATION SCORE: 0%   (0/12 core tweaks optimal)
+
   Can be improved:
      * Per-game performance mode        FPS       Safe
      * Game resolution downscale        FPS       Safe
      * Animation scales off             Latency   Safe
      * Background Wi-Fi scanning        Ping      Safe
      * Touch response latency           Aim       Safe
+     * Battery-optimization exemption   FPS       Safe
+     * Game kept in active bucket       FPS       Safe
+     * Battery saver off while gaming   FPS       Safe
+     * Refresh-rate lock (opt-in)       FPS       Safe
      * ANGLE GLES driver (experimental) FPS?      Experimental
      * Restrict heavy bloat apps        FPS       Moderate
      * Fixed performance mode           FPS       Moderate
+
   Plan
   ----------------------------------------------------------------------
    [ 1] Per-game performance mode          FPS       will apply
@@ -49,19 +64,33 @@
    [ 5] Background Wi-Fi scanning          Ping      will apply
    [ 6] Stop background apps               RAM/FPS   will apply
    [ 7] Touch response latency             Aim       will apply
+   [ 8] Battery-optimization exemption     FPS       will apply  <- keeps the game alive when you switch apps
+   [ 9] Game kept in active bucket         FPS       will apply
+   [10] Battery saver off while gaming     FPS       will apply
+   [11] Restrict heavy bloat apps          FPS       will apply
+   [12] Fixed performance mode             FPS       will apply  <- runs hotter!
+
   Applying
   ----------------------------------------------------------------------
-   [1/7] Per-game performance mode............... performance mode
-   [2/7] Game resolution downscale............... rendering at 75% of pixels
-   [3/7] Animation scales off.................... animations off
-   [4/7] AOT compile game for speed.............. compiled for speed
-   [5/7] Background Wi-Fi scanning............... scanning off
-   [6/7] Stop background apps.................... 8 apps stopped
-   [7/7] Touch response latency.................. long press + multi tap tuned
-  [ OK ] Backup saved: /tmp/ffmo/backup-FAKE1234567890-20260929-023904.json
+   [1/12] Per-game performance mode.............. performance mode
+   [2/12] Game resolution downscale.............. rendering at 75% of pixels
+   [3/12] Animation scales off................... animations off
+   [4/12] AOT compile game for speed............. compiled for speed
+   [5/12] Background Wi-Fi scanning.............. scanning off
+   [6/12] Stop background apps................... 8 apps stopped
+   [7/12] Touch response latency................. long press + multi tap tuned
+   [8/12] Battery-optimization exemption......... battery-optimization exempt
+   [9/12] Game kept in active bucket............. bucket = ACTIVE (no background limits)
+   [10/12] Battery saver off while gaming........ battery saver turned off
+   [11/12] Restrict heavy bloat apps............. 7 apps restricted
+   [12/12] Fixed performance mode................ clocks pinned (phone will run hotter)
+
+  [ OK ] Backup saved: /tmp/ffmo-ex-app/backup-FAKE1234567890-20260929-055939.json
   Undo any time: menu 6) Restore, or -Mode Restore
+
   Verify
   ----------------------------------------------------------------------
+
   Scanning Android settings (nothing is changed)
   ----------------------------------------------------------------------
    [OK] Per-game performance mode          FPS       mode=2,downscaleFactor=0.75
@@ -71,23 +100,31 @@
    [OK] Background Wi-Fi scanning          Ping      scan_always=0 network_reco=0
    [--] Stop background apps               RAM/FPS   on demand
    [OK] Touch response latency             Aim       long_press=250 multi_press=250
+   [OK] Battery-optimization exemption     FPS       exempt from battery optimization
+   [OK] Game kept in active bucket         FPS       bucket ACTIVE
+   [OK] Battery saver off while gaming     FPS       battery saver off
+   [!!] Refresh-rate lock (opt-in)         FPS       not locked (device peak 120 Hz)
    [!!] ANGLE GLES driver (experimental)   FPS?      native GLES driver
-   [!!] Restrict heavy bloat apps          FPS       0/7 restricted
-   [!!] Fixed performance mode             FPS       disabled
+   [OK] Restrict heavy bloat apps          FPS       7/7 restricted
+   [OK] Fixed performance mode             FPS       enabled
    [--] Remove bloat apps                  FPS       opt-in (menu 8)
    [--] Lower screen resolution            FPS       native (best quality)
-   OPTIMIZATION SCORE: 62%   (5/8 core tweaks optimal)
+
+   OPTIMIZATION SCORE: 83%   (10/12 core tweaks optimal)
+
   Can be improved:
+     * Refresh-rate lock (opt-in)       FPS       Safe
      * ANGLE GLES driver (experimental) FPS?      Experimental
-     * Restrict heavy bloat apps        FPS       Moderate
-     * Fixed performance mode           FPS       Moderate
+
   Performance after
   ----------------------------------------------------------------------
-   Temperature : 35.2 C   (cool)
-   Thermal     : NONE (cool)
+   Temperature : 38.4 C   (warm)
+   Thermal     : MODERATE
    Frames      : 71.9 fps (estimated from Android frame stats)
    Smoothness  : 3.8 % janky frames
-   SCORE: 0%  ->  62%
+
+   SCORE: 0%  ->  83%
+
   Free Fire settings that match these tweaks
   ----------------------------------------------------------------------
    Graphics   : Smooth  |  High FPS  |  Shadows OFF  |  AA OFF
@@ -96,7 +133,9 @@
    Phone      : keep 20-30% battery free of apps, avoid charging while playing
    Cooling    : remove the case, never play while charging - heat is the
                 number one cause of FPS drops after 10 minutes.
+
   Report
   ----------------------------------------------------------------------
-  [ OK ] Saved: /tmp/ffmo/report-20260929-023905.html
+  [ OK ] Saved: /tmp/ffmo-ex-app/report-20260929-055941.html
+
    Done. Restart Free Fire and enjoy. 

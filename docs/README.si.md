@@ -70,12 +70,17 @@ Boost කරන්න කලින් tool එක **plan එක පෙන්න�
 | **Stop background apps** | RAM/FPS | 3rd-party apps force-stop |
 | **Touch response latency** | Aim | `long_press_timeout` + `multi_press_timeout` → 250ms |
 
+> 💡 **Game Focus block (Full එකේ තියෙන අලුත් 3):** game එක background එකේ freeze වෙන එක නවත්තන **battery-optimization exemption** එක, **ACTIVE standby bucket** එක, සහ charge කරන වෙලාවට performance අඩු කරන **battery saver** එක off කිරීම. Match එකක් අතරේ ඔයා WhatsApp එකට ගියත් game එක හිර වෙන්නේ නෑ.
+
 ### 🟡 Full profile (අමතරව)
 
 | Tweak | අවවාදය |
 |---|---|
 | **Restrict heavy bloat apps** | Facebook/Netflix වගේ apps වල background activity block (`appops`) |
 | **Fixed performance mode** | Clocks pin කරනවා → **phone එක රත් වෙනවා**. ඒක *consistency* එකක්, max speed එකක් නෙවෙයි |
+| **Battery-optimization exemption** | `dumpsys deviceidle whitelist +` — Android එක game එක background එකේ freeze කරන්නේ නෑ |
+| **Game kept in ACTIVE bucket** | `am set-standby-bucket $pkg 10` — background restrictions සම්පූර්ණයෙන් අයින් |
+| **Battery saver off while gaming** | `settings put global low_power 0` — battery saver **on** නම් විතරයි වෙනසක් වෙන්නේ |
 
 ### 🔵 Custom එකේ විතරක් (අවදානම වැඩි)
 
@@ -83,6 +88,7 @@ Boost කරන්න කලින් tool එක **plan එක පෙන්න�
 |---|---|
 | **Remove bloat apps** | `pm uninstall --user 0` — **සම්පූර්ණයෙන් reversible** |
 | **Lower screen resolution** | `wm size`/`wm density` 75% — මුළු phone එකටම බලපානවා. Fingerprint sensor එක වැඩ නොකරන්නත් පුළුවන් |
+| **Refresh-rate lock** | `settings put system min_refresh_rate` / `peak_refresh_rate` — 120Hz lock එකක්. ⚠️ **සමහර phones මේක ignore කරනවා** (Samsung වගේ) — ඒ නිසා opt-in |
 | **ANGLE GLES driver** 🧪 | Game එක ANGLE (GLES→Vulkan) driver එකෙන් render කරනවා. **Device එක අනුව FPS වැඩි වෙන්නත් අඩු වෙන්නත් පුළුවන්** — ඒ නිසා `-Angle` flag එකෙන් විතරයි enable වෙන්නේ, measure කරලා බලන්න ඕන |
 
 > ❌ **අපි හිතාමතාම නොදාපු දේවල්:** `debug.hwui.renderer` (Skia GL — ඒක **Android UI එකට විතරයි**, game එකට නෙවෙයි) සහ fake touch-sampling props (**sampling rate = hardware**, ADB එකෙන් බෑ). ඒවා placebo, ඒ නිසා දාන්නේ නෑ.
@@ -91,7 +97,7 @@ Boost කරන්න කලින් tool එක **plan එක පෙන්න�
 
 ## 📊 4. Score + Measure ගැන ඇත්ත
 
-- **Score** = core tweaks 8කින් කීයක් optimal ද (0-100%)
+- **Score** = core tweaks 12කින් කීයක් optimal ද (0-100%)
 - **Temperature** (`dumpsys battery`) සහ **thermal state** (`dumpsys thermalservice`) — **නිවැරදි**
 - **FPS + jank %** (`dumpsys gfxinfo`) — **estimate එකක්**. Android එකේ "දැන් FPS කීයද" කියන public API එකක් නෑ
 
@@ -171,7 +177,7 @@ Boost කරන්න කලින් tool එක **plan එක පෙන්න�
 bash tests/run-tests.sh
 ```
 
-Emulated Redmi Note 12 Pro එකක් එක්ක checks **44ක්** run වෙනවා — profiles ඔක්කොම, `-Angle` opt-in, dry-run safety, **Restore round-trip** (device එක byte-level පරණ තත්ත්වයට එනවද කියලා), bloat reversibility, error handling. CI එකේත් run වෙනවා.
+Emulated Redmi Note 12 Pro එකක් එක්ක checks **58ක්** run වෙනවා — profiles ඔක්කොම, `-Angle` opt-in, dry-run safety, **Restore round-trip** (device එක byte-level පරණ තත්ත්වයට එනවද කියලා), bloat reversibility, error handling. CI එකේත් run වෙනවා.
 
 ---
 

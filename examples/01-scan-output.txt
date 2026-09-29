@@ -1,7 +1,9 @@
   [ OK ] Connected: FAKE1234567890
+
 ==========================================================================
   SAFE MOBILE OPTIMIZER - SCAN
 ==========================================================================
+
   Phone
   ----------------------------------------------------------------------
    Redmi Note 12 Pro   -   Android 13 (SDK 33)
@@ -10,6 +12,7 @@
    Screen     : 1080x2400 @ 395 dpi   (120 Hz)
    Free Fire  : com.dts.freefireth  v1.106.1
    Free Fire  : com.dts.freefiremax  v2.106.1
+
   Scanning Android settings (nothing is changed)
   ----------------------------------------------------------------------
    [!!] Per-game performance mode          FPS       default
@@ -19,21 +22,32 @@
    [!!] Background Wi-Fi scanning          Ping      scan_always=1 network_reco=1
    [--] Stop background apps               RAM/FPS   on demand
    [!!] Touch response latency             Aim       long_press=400 multi_press=300
+   [!!] Battery-optimization exemption     FPS       Android may freeze it in background
+   [!!] Game kept in active bucket         FPS       bucket WORKING_SET
+   [!!] Battery saver off while gaming     FPS       battery saver is ON - it caps performance
+   [!!] Refresh-rate lock (opt-in)         FPS       not locked (device peak 120 Hz)
    [!!] ANGLE GLES driver (experimental)   FPS?      native GLES driver
    [!!] Restrict heavy bloat apps          FPS       0/7 restricted
    [!!] Fixed performance mode             FPS       disabled
    [--] Remove bloat apps                  FPS       opt-in (menu 8)
    [--] Lower screen resolution            FPS       native (best quality)
-   OPTIMIZATION SCORE: 0%   (0/8 core tweaks optimal)
+
+   OPTIMIZATION SCORE: 0%   (0/12 core tweaks optimal)
+
   Can be improved:
      * Per-game performance mode        FPS       Safe
      * Game resolution downscale        FPS       Safe
      * Animation scales off             Latency   Safe
      * Background Wi-Fi scanning        Ping      Safe
      * Touch response latency           Aim       Safe
+     * Battery-optimization exemption   FPS       Safe
+     * Game kept in active bucket       FPS       Safe
+     * Battery saver off while gaming   FPS       Safe
+     * Refresh-rate lock (opt-in)       FPS       Safe
      * ANGLE GLES driver (experimental) FPS?      Experimental
      * Restrict heavy bloat apps        FPS       Moderate
      * Fixed performance mode           FPS       Moderate
+
   Performance now
   ----------------------------------------------------------------------
    Temperature : 36.8 C   (cool)

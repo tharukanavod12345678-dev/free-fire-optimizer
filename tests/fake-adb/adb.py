@@ -44,6 +44,7 @@ DEFAULT = {
         "wifi_scan_always_enabled": "1",
         "network_recommendations_enabled": "1",
         "fixed_performance_mode_enabled": "false",
+        "low_power": "1",                 # battery saver is ON on this phone
     },
     "secure": {
         "long_press_timeout": "400",
@@ -57,6 +58,8 @@ DEFAULT = {
     "uninstalled": [],
     "compiled": {},
     "thermal_override": None,
+    "doze_whitelist": ["com.android.shell", "com.whatsapp"],
+    "standby": {"com.dts.freefireth": 20, "com.whatsapp": 10},
     "base_temp": 36.4,
     "packages": [
         "com.dts.freefireth", "com.dts.freefiremax",
@@ -114,7 +117,7 @@ def sh_settings(s, rest):
     act = rest[0]
     ns = rest[1] if len(rest) > 1 else "global"
     key = rest[2] if len(rest) > 2 else ""
-    store = s["secure"] if ns == "secure" else s["global"]
+    store = {"secure": s["secure"], "system": s["system"]}.get(ns, s["global"])
     if act == "get":
         return store.get(key, "null")
     if act == "put":
@@ -264,6 +267,27 @@ def sh_cmd(s, rest):
     return ""
 
 
+def sh_am(s, rest):
+    """am get/set/reset-standby-bucket, force-stop ..."""
+    if not rest:
+        return ""
+    if rest[0] == "get-standby-bucket" and len(rest) > 1:
+        return str(s["standby"].get(rest[1], 20))
+    if rest[0] == "set-standby-bucket" and len(rest) > 2:
+        try:
+            s["standby"][rest[1]] = int(rest[2])
+        except ValueError:
+            s["standby"][rest[1]] = {"active": 10, "working_set": 20, "frequent": 30,
+                                     "rare": 40, "restricted": 45}.get(rest[2], 20)
+        save(s)
+        return ""
+    if rest[0] == "reset-standby-bucket" and len(rest) > 1:
+        s["standby"].pop(rest[1], None)
+        save(s)
+        return ""
+    return ""
+
+
 def sh_dumpsys(s, rest):
     if not rest:
         return ""
@@ -339,7 +363,27 @@ def sh_dumpsys(s, rest):
             out("  mResumedActivity: ActivityRecord{def u0 com.miui.home/.launcher t1}")
         return None
     if what == "deviceidle":
-        out("systemui,com.whatsapp")
+        sub = rest[1] if len(rest) > 1 else ""
+        if sub == "whitelist":
+            arg = rest[2] if len(rest) > 2 else ""
+            if arg.startswith("+"):
+                pkg = arg[1:]
+                if pkg not in s["doze_whitelist"]:
+                    s["doze_whitelist"].append(pkg)
+                    save(s)
+                return None
+            if arg.startswith("-"):
+                pkg = arg[1:]
+                if pkg in s["doze_whitelist"]:
+                    s["doze_whitelist"].remove(pkg)
+                    save(s)
+                return None
+            out("Whitelist system apps:")
+            out("Whitelist user apps:")
+            for p in s["doze_whitelist"]:
+                out("user,%s,10123" % p)
+            return None
+        out("Device idle mode: inactive")
         return None
     if what == "package":
         pkg = rest[1] if len(rest) > 1 else ""
@@ -370,7 +414,7 @@ def run_shell(cmd, s):
     if h == "pm":
         return sh_pm(s, r[1:])
     if h == "am":
-        return ""
+        return sh_am(s, r[1:])
     if h == "dumpsys":
         return sh_dumpsys(s, r[1:])
     if h == "cat" and len(r) > 1 and "meminfo" in r[1]:

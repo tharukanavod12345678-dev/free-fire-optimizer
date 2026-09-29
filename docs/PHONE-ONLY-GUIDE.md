@@ -72,6 +72,18 @@ settings put secure long_press_timeout 250
 settings put secure multi_press_timeout 250
 ```
 
+### Block B3 — 🌟 Game එකට focus: freeze වෙන එක නවත්තන්න + full speed
+
+```
+dumpsys deviceidle whitelist +$pkg
+am set-standby-bucket $pkg 10
+settings put global low_power 0
+```
+
+> මේ 3 නිසා match එකක් අතරේ ඔයා වෙන app එකකට ගියත් Free Fire එක **kill වෙන්නේ නෑ**, background restrictions **අයින් වෙනවා**, සහ battery saver එකේ CPU cap එක **අයින් වෙනවා**. ආපහු හරවන commands පහළ Undo section එකේ තියෙනවා.
+>
+> ⚠️ `low_power 0` කියන්නේ battery saver එක **off** කරනවා කියන එකයි — saver on නම් විතරයි වෙනසක් වෙන්නේ.
+
 ### Block C — Game එක AOT compile කරන්න (loading/stutter අඩු)
 
 ```
@@ -102,6 +114,15 @@ settings put global angle_gl_driver_selection_values angle
 > මේකෙන් Free Fire එක **ANGLE** (OpenGL ES → Vulkan translation layer) එකෙන් render වෙනවා. Google එකේම documented ක්රමයක්.
 > ⚠️ **Device එක අනුව FPS වැඩි වෙන්නත් අඩු වෙන්නත් පුළුවන්.** දාන්න කලින් `dumpsys gfxinfo` එකෙන් jank % එකක් ගන්න, දාලා reboot කරලා ආයෙත් ගන්න — compare කරන්න. නරක නම් Block D3 එකෙන් අයින් කරන්න.
 > 💡 ඒ වගේම `debug.hwui.renderer` (Skia GL) නම් **දාන්න එපා** — ඒක Android UI එකට විතරයි, **game එකට බලපෑමක් නෑ**.
+
+### Block D2b — (Optional) Refresh-rate lock (සමහර phones ignore කරනවා)
+
+```
+settings put system min_refresh_rate 120.0
+settings put system peak_refresh_rate 120.0
+```
+
+> Display එක 120Hz පෙන්නනවා නම් විතරයි මේකෙන් වැඩක් තියෙන්නේ. Samsung වගේ සමහර phones මේක ignore කරනවා — ඒක normal. අයින් කරන්න `settings delete system min_refresh_rate` + `settings delete system peak_refresh_rate`.
 
 ### Block D3 — ANGLE අයින් කරන්න
 
@@ -135,6 +156,11 @@ cmd package compile -m speed-profile -f $pkg
 cmd power set-fixed-performance-mode-enabled false
 settings put secure long_press_timeout 400
 settings put secure multi_press_timeout 300
+dumpsys deviceidle whitelist -$pkg
+am reset-standby-bucket $pkg
+settings delete global low_power
+settings delete system min_refresh_rate
+settings delete system peak_refresh_rate
 settings delete global angle_gl_driver_selection_pkgs
 settings delete global angle_gl_driver_selection_values
 ```
@@ -228,6 +254,9 @@ settings put global network_recommendations_enabled 0
 settings put secure long_press_timeout 250
 settings put secure multi_press_timeout 250
 cmd package compile -m speed -f $pkg
+dumpsys deviceidle whitelist +$pkg
+am set-standby-bucket $pkg 10
+settings put global low_power 0
 
 # ---- UNDO ----
 cmd game mode default $pkg
@@ -240,6 +269,9 @@ settings put global network_recommendations_enabled 1
 settings put secure long_press_timeout 400
 settings put secure multi_press_timeout 300
 cmd package compile -m speed-profile -f $pkg
+dumpsys deviceidle whitelist -$pkg
+am reset-standby-bucket $pkg
+settings delete global low_power
 ```
 
 ---

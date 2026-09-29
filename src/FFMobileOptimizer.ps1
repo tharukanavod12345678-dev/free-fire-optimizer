@@ -2,7 +2,7 @@
 <#
 ===============================================================================
   FF MOBILE OPTIMIZER  -  Free Fire performance optimizer for Android phones
-  Version 1.1.0                                   (Android 12 / 13 / 14 / 15)
+  Version 1.2.0                                   (Android 12 / 13 / 14 / 15)
 -------------------------------------------------------------------------------
   What it does
     Connects to your phone over ADB (USB or Wi-Fi), finds Free Fire, then
@@ -15,6 +15,10 @@
       * background Wi-Fi scanning off    (less network jitter)
       * stop/limit background apps       (more RAM + CPU for the game)
       * touch response latency           (long-press / multi-tap timeouts)
+      * battery-optimization exemption   (Android stops freezing the game)
+      * game kept in the ACTIVE bucket   (no background restrictions)
+      * battery saver off while gaming   (only when it was on)
+      * optional: refresh-rate lock      (opt-in, some phones ignore it)
       * optional: fixed performance mode, bloat removal, global resolution
       * experimental: ANGLE renderer     (-Angle, opt-in, measure before/after)
 
@@ -64,7 +68,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$script:Version = '1.1.0'
+$script:Version = '1.2.0'
 $script:AppDir = if ($env:FFMO_HOME) { $env:FFMO_HOME } else {
     Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'FFMobileOptimizer'
 }
@@ -357,6 +361,29 @@ function Get-RefreshRate {
     return "$([int]$max) Hz"
 }
 
+function Get-PeakRefreshValue {
+    $r = Invoke-Shell 'dumpsys display' -IgnoreErrors
+    $best = 0.0
+    foreach ($pattern in @('fps=([\d\.]+)', '"fps"\s*:\s*([\d\.]+)', 'refreshRate=([\d\.]+)')) {
+        foreach ($m in [regex]::Matches($r.Text, $pattern)) {
+            $v = 0.0
+            if ([double]::TryParse($m.Groups[1].Value, [ref]$v) -and $v -gt $best) { $best = $v }
+        }
+    }
+    return [int][math]::Round($best)
+}
+
+function Test-InDozeWhitelist {
+    param([string]$Package)
+    $r = Invoke-Shell 'dumpsys deviceidle whitelist' -IgnoreErrors
+    foreach ($line in ($r.Text -split "`n")) {
+        foreach ($tok in ($line -split ',')) {
+            if ($tok.Trim() -eq $Package) { return $true }
+        }
+    }
+    return $false
+}
+
 function Get-FreeFirePackages {
     $installed = (Invoke-Shell 'pm list packages' -IgnoreErrors).Text
     $found = @()
@@ -495,6 +522,10 @@ function Get-TweakTable {
         [pscustomobject]@{ Id='WifiScan';    Name='Background Wi-Fi scanning';  Impact='Ping';    Risk='Safe';     In=@('Safe','Full','Custom'); Reboot=$false }
         [pscustomobject]@{ Id='KillApps';    Name='Stop background apps';       Impact='RAM/FPS'; Risk='Safe';     In=@('Safe','Full','Custom'); Reboot=$false }
         [pscustomobject]@{ Id='TouchResp';   Name='Touch response latency';     Impact='Aim';     Risk='Safe';     In=@('Safe','Full','Custom'); Reboot=$false }
+        [pscustomobject]@{ Id='DozeWhitelist'; Name='Battery-optimization exemption'; Impact='FPS'; Risk='Safe'; In=@('Full','Custom');      Reboot=$false }
+        [pscustomobject]@{ Id='StandbyBucket'; Name='Game kept in active bucket'; Impact='FPS';     Risk='Safe';     In=@('Full','Custom');        Reboot=$false }
+        [pscustomobject]@{ Id='LowPower';      Name='Battery saver off while gaming'; Impact='FPS'; Risk='Safe';   In=@('Full','Custom');        Reboot=$false }
+        [pscustomobject]@{ Id='RefreshLock';   Name='Refresh-rate lock (opt-in)'; Impact='FPS';     Risk='Safe';     In=@('Custom');               Reboot=$false }
         [pscustomobject]@{ Id='Angle';       Name='ANGLE GLES driver (experimental)'; Impact='FPS?'; Risk='Experimental'; In=@('Custom'); Reboot=$true }
         [pscustomobject]@{ Id='BgRestrict';  Name='Restrict heavy bloat apps';  Impact='FPS';     Risk='Moderate'; In=@('Full','Custom');        Reboot=$false }
         [pscustomobject]@{ Id='FixedPerf';   Name='Fixed performance mode';     Impact='FPS';     Risk='Moderate'; In=@('Full','Custom');        Reboot=$false }
@@ -584,6 +615,31 @@ function Test-Tweak {
                 $on = ($pkgs -and ($pkgs -split ',' | Where-Object { $_.Trim() -eq $script:ActivePackage })) -and ($vals -and $vals -match 'angle')
                 return [pscustomobject]@{ Optimal=$on; Current=$(if ($on) { 'ANGLE active for this game' } elseif ($pkgs) { "other: $pkgs" } else { 'native GLES driver' }) }
             }
+            'DozeWhitelist' {
+                $on = Test-InDozeWhitelist -Package $script:ActivePackage
+                return [pscustomobject]@{ Optimal=$on; Current=$(if ($on) { 'exempt from battery optimization' } else { 'Android may freeze it in background' }) }
+            }
+            'StandbyBucket' {
+                $v = (Invoke-Shell "am get-standby-bucket $($script:ActivePackage)" -IgnoreErrors).Text.Trim()
+                $name = switch ($v) { '10' { 'ACTIVE' } '20' { 'WORKING_SET' } '30' { 'FREQUENT' } '40' { 'RARE' } '45' { 'RESTRICTED' } default { "bucket '$v'" } }
+                return [pscustomobject]@{ Optimal=($v -eq '10'); Current=("bucket $name") }
+            }
+            'LowPower' {
+                $v = Get-GlobalSetting 'low_power'
+                $ok = ($null -eq $v -or $v -eq '0')
+                return [pscustomobject]@{ Optimal=$ok; Current=$(if ($v -eq '1') { 'battery saver is ON - it caps performance' } else { 'battery saver off' }) }
+            }
+            'RefreshLock' {
+                $peak = Get-PeakRefreshValue
+                $mn = Get-SystemSetting 'min_refresh_rate'
+                $pk = Get-SystemSetting 'peak_refresh_rate'
+                $mnd = 0.0; $pkd = 0.0; $okM = $false; $okP = $false
+                if ($mn) { $okM = [double]::TryParse($mn, [ref]$mnd) }
+                if ($pk) { $okP = [double]::TryParse($pk, [ref]$pkd) }
+                $ok = ($peak -gt 0 -and $okM -and $okP -and $mnd -ge $peak -and $pkd -ge $peak)
+                $cur = if ($mn -or $pk) { "min=$(Fmt $mn) peak=$(Fmt $pk) (device peak ${peak} Hz)" } else { "not locked (device peak ${peak} Hz)" }
+                return [pscustomobject]@{ Optimal=$ok; Current=$cur }
+            }
             'RemoveBloat' { return [pscustomobject]@{ Optimal=$true; Current='opt-in (menu 8)'; OnDemand=$true } }
             'GlobalRes' {
                 $sizeOut = (Invoke-Shell 'wm size' -IgnoreErrors).Text
@@ -642,6 +698,15 @@ function Set-TrackedGlobal {
     if ($old -eq $Value) { return $false }
     Add-Change -Kind 'GlobalSetting' -Target $Key -OldValue $old -NewValue $Value -Note $Note
     Set-GlobalSetting -Key $Key -Value $Value | Out-Null
+    return $true
+}
+
+function Set-TrackedSystem {
+    param([string]$Key, [string]$Value, [string]$Note = '')
+    $old = Get-SystemSetting $Key
+    if ($old -eq $Value) { return $false }
+    Add-Change -Kind 'SystemSetting' -Target $Key -OldValue $old -NewValue $Value -Note $Note
+    Set-SystemSetting -Key $Key -Value $Value | Out-Null
     return $true
 }
 
@@ -722,6 +787,36 @@ function Invoke-Tweak {
             Set-GlobalSetting -Key 'angle_gl_driver_selection_pkgs' -Value ($pkgs -join ',') | Out-Null
             Set-GlobalSetting -Key 'angle_gl_driver_selection_values' -Value ($vals -join ',') | Out-Null
             return 'ANGLE enabled (reboot + test!)'
+        }
+        'DozeWhitelist' {
+            $r = Invoke-Shell "dumpsys deviceidle whitelist +$Package" -IgnoreErrors
+            if ($r.Text -match '(?i)error|exception') { throw $r.Text }
+            Add-Change -Kind 'DozeWhitelist' -Target $Package -OldValue 'optimized' -NewValue 'exempt' `
+                -Note "restore: dumpsys deviceidle whitelist -$Package"
+            return 'battery-optimization exempt'
+        }
+        'StandbyBucket' {
+            $old = (Invoke-Shell "am get-standby-bucket $Package" -IgnoreErrors).Text.Trim()
+            if ($old -eq '10') { return 'already ACTIVE' }
+            Add-Change -Kind 'StandbyBucket' -Target $Package -OldValue $old -NewValue '10' `
+                -Note "restore: am set-standby-bucket $Package <old>"
+            $r = Invoke-Shell "am set-standby-bucket $Package 10" -IgnoreErrors
+            if ($r.Text -match '(?i)error|exception') { throw $r.Text }
+            return 'bucket = ACTIVE (no background limits)'
+        }
+        'LowPower' {
+            $cur = Get-GlobalSetting 'low_power'
+            if ($null -eq $cur -or $cur -eq '0') { return 'battery saver already off' }
+            $null = Set-TrackedGlobal 'low_power' '0' -Note 'battery saver was ON - turned off for gaming'
+            return 'battery saver turned off'
+        }
+        'RefreshLock' {
+            $peak = Get-PeakRefreshValue
+            if ($peak -le 0) { return 'skipped (refresh rate unknown on this build)' }
+            $val = [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, '{0:0.0}', [double]$peak)
+            $null = Set-TrackedSystem 'min_refresh_rate'  $val -Note 'device-dependent: some phones ignore this'
+            $null = Set-TrackedSystem 'peak_refresh_rate' $val -Note 'device-dependent: some phones ignore this'
+            return "refresh lock set to ${peak} Hz"
         }
         'BgRestrict' {
             $targets = Get-BloatList
@@ -886,7 +981,7 @@ function Invoke-Restore {
         if ($ans -notmatch '^(y|yes)$') { Write-Info 'Cancelled.'; return $false }
     }
     $failed = 0; $done = 0
-    $undoOrder = @('GlobalSetting', 'SecureSetting', 'Downscale', 'GameMode', 'FixedPerf', 'AppOp', 'RemovedPackage', 'WmSize', 'WmDensity', 'Compile')
+    $undoOrder = @('GlobalSetting', 'SecureSetting', 'SystemSetting', 'Downscale', 'GameMode', 'DozeWhitelist', 'StandbyBucket', 'FixedPerf', 'AppOp', 'RemovedPackage', 'WmSize', 'WmDensity', 'Compile')
     $sorted = @($bk.Changes | Sort-Object { $undoOrder.IndexOf($_.Kind) })
     foreach ($c in $sorted) {
         try {
@@ -923,6 +1018,31 @@ function Invoke-Restore {
                     } else {
                         Invoke-Shell "settings delete secure $($c.Target)" -IgnoreErrors | Out-Null
                         Write-Step "$($c.Target)" 'reset to default'
+                    }
+                    $done++
+                }
+                'SystemSetting' {
+                    if ($c.OldValue) {
+                        Set-SystemSetting -Key $c.Target -Value $c.OldValue | Out-Null
+                        Write-Step "$($c.Target) -> $($c.OldValue)" 'restored'
+                    } else {
+                        Invoke-Shell "settings delete system $($c.Target)" -IgnoreErrors | Out-Null
+                        Write-Step "$($c.Target)" 'reset to default'
+                    }
+                    $done++
+                }
+                'DozeWhitelist' {
+                    Invoke-Shell "dumpsys deviceidle whitelist -$($c.Target)" -IgnoreErrors | Out-Null
+                    Write-Step "battery exemption ($($c.Target))" 'removed'
+                    $done++
+                }
+                'StandbyBucket' {
+                    if ($c.OldValue -match '^\d+$') {
+                        Invoke-Shell "am set-standby-bucket $($c.Target) $($c.OldValue)" -IgnoreErrors | Out-Null
+                        Write-Step "standby bucket ($($c.Target))" "back to $($c.OldValue)"
+                    } else {
+                        Invoke-Shell "am reset-standby-bucket $($c.Target)" -IgnoreErrors | Out-Null
+                        Write-Step "standby bucket ($($c.Target))" 'reset'
                     }
                     $done++
                 }
@@ -1121,6 +1241,15 @@ function Show-PhoneGuide {
         'settings put secure multi_press_timeout 250',
         'am force-stop com.facebook.katana',
         '',
+        '# --- keep the game alive + full speed ------------------------------------',
+        'dumpsys deviceidle whitelist +$pkg',
+        'am set-standby-bucket $pkg 10',
+        'settings put global low_power 0',
+        '',
+        '# --- optional: refresh-rate lock (some phones ignore it) ------------------',
+        'settings put system min_refresh_rate 120.0',
+        'settings put system peak_refresh_rate 120.0',
+        '',
         '# --- EXPERIMENTAL: route the game through the ANGLE driver ----------------',
         '#     measure dumpsys gfxinfo jank BEFORE and AFTER - it can help or hurt',
         'settings put global angle_gl_driver_selection_pkgs $pkg',
@@ -1136,6 +1265,11 @@ function Show-PhoneGuide {
         'settings put global network_recommendations_enabled 1',
         'settings put secure long_press_timeout 400',
         'settings put secure multi_press_timeout 300',
+        'dumpsys deviceidle whitelist -$pkg',
+        'am reset-standby-bucket $pkg',
+        'settings delete global low_power',
+        'settings delete system min_refresh_rate',
+        'settings delete system peak_refresh_rate',
         'settings delete global angle_gl_driver_selection_pkgs',
         'settings delete global angle_gl_driver_selection_values',
         'cmd package compile -m speed-profile -f $pkg',
@@ -1212,6 +1346,8 @@ function Invoke-Optimize {
         if ($t.Id -eq 'GlobalRes') { $note = '  <- changes the whole phone UI' }
         if ($t.Id -eq 'Angle') { $note = '  <- EXPERIMENTAL: measure before/after, may lower FPS' }
         if ($t.Id -eq 'RemoveBloat') { $note = '  <- reversible, apps come back from Play Store' }
+        if ($t.Id -eq 'DozeWhitelist') { $note = '  <- keeps the game alive when you switch apps' }
+        if ($t.Id -eq 'RefreshLock') { $note = '  <- some phones ignore this' }
         Write-Host ("   [{0,2}] {1,-34} {2,-9} {3}{4}" -f $i, $t.Name, $t.Impact, $state, $note) -ForegroundColor $color
     }
 

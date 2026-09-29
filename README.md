@@ -26,6 +26,10 @@ A PowerShell tool that connects to your Android phone over ADB (USB or Wi-Fi) an
 | **Background Wi-Fi scanning off** | Less network jitter → more stable ping |
 | **Background apps stopped** | More RAM and CPU left for the game |
 | **Touch response latency** | Lower long-press / multi-tap timeouts |
+| **Battery-optimization exemption** *(Full)* | `dumpsys deviceidle whitelist +pkg` — Android stops freezing the game in the background |
+| **Game kept in the ACTIVE bucket** *(Full)* | `am set-standby-bucket pkg 10` — no background restrictions for the game |
+| **Battery saver off while gaming** *(Full)* | `settings put global low_power 0` — only if battery saver was on (it caps performance) |
+| **Refresh-rate lock** *(Custom, opt-in)* | `settings put system min/peak_refresh_rate` — **some phones ignore it** |
 | **Bloat app restriction** *(Full)* | `appops` deny on Facebook/Netflix/LinkedIn-style background hogs |
 | **Fixed performance mode** *(Full)* | Stable clocks — note: this is *consistency*, not raw speed |
 | **Bloat removal** *(Custom, opt-in)* | `pm uninstall --user 0` — reversible from the tool or Play Store |
@@ -153,6 +157,8 @@ battery free.
 .\FFMobileOptimizer.ps1 -Mode Optimize -Profile Full -Force
 .\FFMobileOptimizer.ps1 -Mode Optimize -Profile Full -Angle      # + experimental ANGLE renderer
 .\FFMobileOptimizer.ps1 -Mode Optimize -Profile Custom -Tweaks "GameMode,Downscale" -Downscale 0.6
+.\FFMobileOptimizer.ps1 -Mode Optimize -Profile Custom -Tweaks "DozeWhitelist,StandbyBucket,LowPower"   # game-focus
+.\FFMobileOptimizer.ps1 -Mode Optimize -Profile Custom -Tweaks "RefreshLock"                            # opt-in
 .\FFMobileOptimizer.ps1 -Mode Optimize -Wireless                 # asks for IP:port (wireless debugging)
 .\FFMobileOptimizer.ps1 -Mode Restore
 .\FFMobileOptimizer.ps1 -Mode Restore -BackupFile "C:\path\pending-XXX.json"
@@ -163,7 +169,7 @@ battery free.
 |---|---|
 | `-Mode` | `Menu` · `Scan` · `Optimize` · `Measure` · `Restore` · `PhoneGuide` · `Report` · `Doctor` |
 | `-Profile` | `Safe` · `Full` · `Custom` |
-| `-Tweaks` | ids for `Custom`: `GameMode, Downscale, Animations, Compile, WifiScan, KillApps, TouchResp, BgRestrict, FixedPerf, Angle, RemoveBloat, GlobalRes` |
+| `-Tweaks` | ids for `Custom`: `GameMode, Downscale, Animations, Compile, WifiScan, KillApps, TouchResp, DozeWhitelist, StandbyBucket, LowPower, RefreshLock, BgRestrict, FixedPerf, Angle, RemoveBloat, GlobalRes` |
 | `-Downscale` | `1.0` = off · `0.75` = default · `0.5` = max FPS gain (slightly blurrier) |
 | `-Angle` | 🧪 experimental — enable ANGLE for the game package |
 | `-Serial` / `-Wireless` / `-AdbPath` | pick device · Wi-Fi ADB · use a specific adb binary |
@@ -190,14 +196,15 @@ bash tests/run-tests.sh
 
 ```
 ==============================================================
-  RESULT: 44 passed, 0 failed
+  RESULT: 58 passed, 0 failed
 ==============================================================
 ```
 
 It covers: script parsing, device detection, the scan/measure output, all three profiles, the
-`-Angle` opt-in, dry-run safety, **one-restore-undoes-everything round-trip verified byte-for-byte
-against a pristine device**, reversible bloat removal, custom downscale factors, the phone-only
-guide, and error handling. Runs on Linux/macOS/CI (needs `pwsh` + `python3`).
+`-Angle` opt-in, the game-focus tweaks (battery-optimization exemption, standby bucket, battery
+saver, refresh-rate lock), dry-run safety, **one-restore-undoes-everything round-trip verified
+byte-for-byte against a pristine device**, reversible bloat removal, custom downscale factors,
+the phone-only guide, and error handling. Runs on Linux/macOS/CI (needs `pwsh` + `python3`).
 
 ---
 

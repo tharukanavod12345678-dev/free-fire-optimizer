@@ -4,6 +4,32 @@ All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-09-29
+
+### Added
+- **Game-focus tweaks** — the phone now keeps the game alive and unrestricted while you play:
+  - **Battery-optimization exemption** (`dumpsys deviceidle whitelist +pkg`) — Android no longer
+    freezes the game in the background. Restored with `-pkg`.
+  - **ACTIVE standby bucket** (`am set-standby-bucket pkg 10`) — no background restrictions.
+    Restore puts the exact previous bucket back (`am reset-standby-bucket` when unknown).
+  - **Battery saver off while gaming** (`low_power 0`) — only changes anything if battery saver
+    was on; the previous value is restored afterwards.
+  All three sit in the **Full** profile (Safe is unchanged).
+- **Refresh-rate lock** (opt-in, Custom only): `min_refresh_rate` / `peak_refresh_rate` set to the
+  display's peak (read from `dumpsys display`). Honest note in the plan step: **some phones ignore
+  it** (device-dependent). Fully restored/deleted by `Restore`.
+- New `SystemSetting` change kind in the backup format, plus `Set-TrackedSystem` tracking helper.
+- Phone-only guide blocks for the three game-focus commands and the refresh-rate lock (with undo).
+
+### Changed
+- Score denominator: **12 core tweaks** (was 8) — the four new tweaks are counted.
+- Regression suite grew from 44 to **58 checks**, including a byte-for-byte restore check that now
+  covers the new tweak kinds, and a new T13 group for the refresh-rate lock.
+
+### Not added (deliberately)
+- **Thermal override** (`cmd thermalservice override-status 0`) — no monitoring, so it stays out.
+- **Boost & Launch** menu — out of scope for this release.
+
 ## [1.1.0] - 2026-09-29
 
 ### Added

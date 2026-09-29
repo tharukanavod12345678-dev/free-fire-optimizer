@@ -80,7 +80,11 @@ chk "device detected"        "Redmi Note 12 Pro"                /tmp/t2.txt
 chk "android version read"   "Android 13 (SDK 33)"              /tmp/t2.txt
 chk "refresh rate read"      "120 Hz"                           /tmp/t2.txt
 chk "free fire detected"     "com.dts.freefireth"               /tmp/t2.txt
-chk "starts at 0% score"     "(0/8 core tweaks optimal)"        /tmp/t2.txt
+chk "starts at 0% score"     "(0/12 core tweaks optimal)"       /tmp/t2.txt
+chk "focus tweak rows shown" "Battery-optimization exemption"   /tmp/t2.txt
+chk "standby bucket read"    "bucket WORKING_SET"               /tmp/t2.txt
+chk "battery saver read"     "battery saver is ON"              /tmp/t2.txt
+chk "refresh lock read"      "not locked (device peak 120 Hz)"  /tmp/t2.txt
 chk "temperature read"       "Temperature : 36."                /tmp/t2.txt
 chk "touch latency read"     "long_press=400 multi_press=300"   /tmp/t2.txt
 chk "angle state read"       "native GLES driver"               /tmp/t2.txt
@@ -111,21 +115,38 @@ ok = (d['game_overlay'].get('com.dts.freefireth') == 'mode=2,downscaleFactor=0.7
       and d['secure']['long_press_timeout'] == '250'
       and 'angle_gl_driver_selection_pkgs' not in d['global'])
 sys.exit(0 if ok else 1)" && ok "device state really changed" || bad "device state not changed"
+python3 -c "
+import json, sys
+d = json.load(open('$DEV/state.json'))
+ok = ('com.dts.freefireth' not in d['doze_whitelist']
+      and d['standby'].get('com.dts.freefireth') == 20
+      and d['global'].get('low_power') == '1')
+sys.exit(0 if ok else 1)" && ok "Safe profile leaves the focus tweaks alone" || bad "Safe touched focus tweaks"
 
 echo
 echo "== T5: full profile (ANGLE still off by default) =="
 reset_device; reset_app
 "$PS" -NoProfile -File "$SRC" -Mode Optimize -Profile Full -AdbPath "$FAKE_ADB" -Force > /tmp/t5.txt 2>&1
-chk "9 tweaks applied"       "[9/9]"                            /tmp/t5.txt
+chk "12 tweaks applied"      "[12/12]"                          /tmp/t5.txt
+chk "doze exemption applied" "battery-optimization exempt"      /tmp/t5.txt
+chk "active bucket applied"  "bucket = ACTIVE"                  /tmp/t5.txt
+chk "battery saver applied"  "battery saver turned off"         /tmp/t5.txt
 chk "fixed perf applied"     "clocks pinned"                    /tmp/t5.txt
 chk "bloat restricted"       "apps restricted"                  /tmp/t5.txt
+python3 -c "
+import json, sys
+d = json.load(open('$DEV/state.json'))
+ok = ('com.dts.freefireth' in d['doze_whitelist']
+      and d['standby'].get('com.dts.freefireth') == 10
+      and d['global'].get('low_power') == '0')
+sys.exit(0 if ok else 1)" && ok "focus tweaks really applied" || bad "focus tweaks not applied"
 grep -q "ANGLE enabled" /tmp/t5.txt.clean && bad "ANGLE must need -Angle flag" || ok "ANGLE still off by default"
 
 echo
 echo "== T6: -Angle flag (experimental opt-in) =="
 reset_device; reset_app
 "$PS" -NoProfile -File "$SRC" -Mode Optimize -Profile Full -Angle -AdbPath "$FAKE_ADB" -Force > /tmp/t6.txt 2>&1
-chk "10 tweaks applied"      "[10/10]"                          /tmp/t6.txt
+chk "13 tweaks applied"      "[13/13]"                          /tmp/t6.txt
 chk "experimental warning"   "EXPERIMENTAL: measure before/after" /tmp/t6.txt
 chk "angle enabled message"  "ANGLE enabled"                    /tmp/t6.txt
 python3 -c "
@@ -152,9 +173,9 @@ python3 -c "
 import json
 d = json.load(open('$APP/pending-FAKE1234567890.json'))
 print(len(d['Changes']))" > /tmp/t8n.txt
-chk "20 changes accumulated" "20"                               /tmp/t8n.txt
+chk "23 changes accumulated" "23"                               /tmp/t8n.txt
 "$PS" -NoProfile -File "$SRC" -Mode Restore -AdbPath "$FAKE_ADB" -Force > /tmp/t8.txt 2>&1
-chk "20 items reverted"      "20 item(s) reverted"              /tmp/t8.txt
+chk "23 items reverted"      "23 item(s) reverted"              /tmp/t8.txt
 chk "change log cleared"     "Change log cleared"               /tmp/t8.txt
 python3 - <<EOF > /tmp/t8rt.txt
 import json
@@ -201,6 +222,24 @@ echo "== T11: phone-only guide =="
 chk "optimize commands"      "cmd game mode performance"         /tmp/t11.txt
 chk "angle section"          "angle_gl_driver_selection_pkgs"    /tmp/t11.txt
 chk "undo section"           "undo everything"                   /tmp/t11.txt
+chk "focus commands in guide" "dumpsys deviceidle whitelist +"  /tmp/t11.txt
+chk "bucket command in guide" "am set-standby-bucket"           /tmp/t11.txt
+
+echo
+echo "== T13: refresh-rate lock (opt-in, Custom only) =="
+reset_device; reset_app
+"$PS" -NoProfile -File "$SRC" -Mode Optimize -Profile Custom -Tweaks "RefreshLock" -AdbPath "$FAKE_ADB" -Force > /tmp/t13.txt 2>&1
+chk "refresh lock applied"   "refresh lock set to 120 Hz"       /tmp/t13.txt
+python3 -c "
+import json, sys
+d = json.load(open('$DEV/state.json'))
+ok = (d['system'].get('min_refresh_rate') == '120.0' and d['system'].get('peak_refresh_rate') == '120.0')
+sys.exit(0 if ok else 1)" && ok "system settings written" || bad "system settings missing"
+"$PS" -NoProfile -File "$SRC" -Mode Restore -AdbPath "$FAKE_ADB" -Force > /tmp/t13b.txt 2>&1
+python3 -c "
+import json, sys
+d = json.load(open('$DEV/state.json'))
+sys.exit(0 if not d['system'] else 1)" && ok "refresh lock removed by restore" || bad "refresh lock left behind"
 
 echo
 echo "== T12: restore with no backup =="

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Wrapper so the python shim can be used exactly like a real `adb` binary.
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec python3 "$DIR/adb.py" "$@"

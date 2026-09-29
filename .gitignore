@@ -1,0 +1,21 @@
+# ---- artefacts produced by the tool on a user's machine --------------------
+backup-*.json
+pending-*.json
+report-*.html
+report-*.json
+
+# ---- auto-downloaded adb (Google platform-tools) ---------------------------
+platform-tools/
+
+# ---- OS / editor noise -----------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~
+
+# ---- PowerShell ------------------------------------------------------------
+*.ps1xml
+*.pssc

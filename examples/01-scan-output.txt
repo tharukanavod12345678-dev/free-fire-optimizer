@@ -1,0 +1,42 @@
+  [ OK ] Connected: FAKE1234567890
+==========================================================================
+  SAFE MOBILE OPTIMIZER - SCAN
+==========================================================================
+  Phone
+  ----------------------------------------------------------------------
+   Redmi Note 12 Pro   -   Android 13 (SDK 33)
+   SoC        : MediaTek Helio G99
+   RAM        : 8 GB total, 1.5 GB free
+   Screen     : 1080x2400 @ 395 dpi   (120 Hz)
+   Free Fire  : com.dts.freefireth  v1.106.1
+   Free Fire  : com.dts.freefiremax  v2.106.1
+  Scanning Android settings (nothing is changed)
+  ----------------------------------------------------------------------
+   [!!] Per-game performance mode          FPS       default
+   [!!] Game resolution downscale          FPS       factor=off
+   [!!] Animation scales off               Latency   window=1.0 transition=1.0 animator=1.0
+   [--] AOT compile game for speed         Stutter   on demand (runs each optimize)
+   [!!] Background Wi-Fi scanning          Ping      scan_always=1 network_reco=1
+   [--] Stop background apps               RAM/FPS   on demand
+   [!!] Touch response latency             Aim       long_press=400 multi_press=300
+   [!!] ANGLE GLES driver (experimental)   FPS?      native GLES driver
+   [!!] Restrict heavy bloat apps          FPS       0/7 restricted
+   [!!] Fixed performance mode             FPS       disabled
+   [--] Remove bloat apps                  FPS       opt-in (menu 8)
+   [--] Lower screen resolution            FPS       native (best quality)
+   OPTIMIZATION SCORE: 0%   (0/8 core tweaks optimal)
+  Can be improved:
+     * Per-game performance mode        FPS       Safe
+     * Game resolution downscale        FPS       Safe
+     * Animation scales off             Latency   Safe
+     * Background Wi-Fi scanning        Ping      Safe
+     * Touch response latency           Aim       Safe
+     * ANGLE GLES driver (experimental) FPS?      Experimental
+     * Restrict heavy bloat apps        FPS       Moderate
+     * Fixed performance mode           FPS       Moderate
+  Performance now
+  ----------------------------------------------------------------------
+   Temperature : 36.8 C   (cool)
+   Thermal     : LIGHT
+   Frames      : 44.1 fps (estimated from Android frame stats)
+   Smoothness  : 21.6 % janky frames

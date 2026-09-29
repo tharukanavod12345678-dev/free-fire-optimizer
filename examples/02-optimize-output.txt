@@ -1,0 +1,102 @@
+  [ OK ] Connected: FAKE1234567890
+==========================================================================
+  OPTIMIZE - profile: Safe
+==========================================================================
+  Phone
+  ----------------------------------------------------------------------
+   Redmi Note 12 Pro   -   Android 13 (SDK 33)
+   SoC        : MediaTek Helio G99
+   RAM        : 8 GB total, 1.5 GB free
+   Screen     : 1080x2400 @ 395 dpi   (120 Hz)
+   Free Fire  : com.dts.freefireth  v1.106.1
+   Free Fire  : com.dts.freefiremax  v2.106.1
+  Performance right now
+  ----------------------------------------------------------------------
+   Temperature : 36.8 C   (cool)
+   Thermal     : LIGHT
+   Frames      : 44.1 fps (estimated from Android frame stats)
+   Smoothness  : 21.6 % janky frames
+  Scanning Android settings (nothing is changed)
+  ----------------------------------------------------------------------
+   [!!] Per-game performance mode          FPS       default
+   [!!] Game resolution downscale          FPS       factor=off
+   [!!] Animation scales off               Latency   window=1.0 transition=1.0 animator=1.0
+   [--] AOT compile game for speed         Stutter   on demand (runs each optimize)
+   [!!] Background Wi-Fi scanning          Ping      scan_always=1 network_reco=1
+   [--] Stop background apps               RAM/FPS   on demand
+   [!!] Touch response latency             Aim       long_press=400 multi_press=300
+   [!!] ANGLE GLES driver (experimental)   FPS?      native GLES driver
+   [!!] Restrict heavy bloat apps          FPS       0/7 restricted
+   [!!] Fixed performance mode             FPS       disabled
+   [--] Remove bloat apps                  FPS       opt-in (menu 8)
+   [--] Lower screen resolution            FPS       native (best quality)
+   OPTIMIZATION SCORE: 0%   (0/8 core tweaks optimal)
+  Can be improved:
+     * Per-game performance mode        FPS       Safe
+     * Game resolution downscale        FPS       Safe
+     * Animation scales off             Latency   Safe
+     * Background Wi-Fi scanning        Ping      Safe
+     * Touch response latency           Aim       Safe
+     * ANGLE GLES driver (experimental) FPS?      Experimental
+     * Restrict heavy bloat apps        FPS       Moderate
+     * Fixed performance mode           FPS       Moderate
+  Plan
+  ----------------------------------------------------------------------
+   [ 1] Per-game performance mode          FPS       will apply
+   [ 2] Game resolution downscale          FPS       will apply
+   [ 3] Animation scales off               Latency   will apply
+   [ 4] AOT compile game for speed         Stutter   will apply
+   [ 5] Background Wi-Fi scanning          Ping      will apply
+   [ 6] Stop background apps               RAM/FPS   will apply
+   [ 7] Touch response latency             Aim       will apply
+  Applying
+  ----------------------------------------------------------------------
+   [1/7] Per-game performance mode............... performance mode
+   [2/7] Game resolution downscale............... rendering at 75% of pixels
+   [3/7] Animation scales off.................... animations off
+   [4/7] AOT compile game for speed.............. compiled for speed
+   [5/7] Background Wi-Fi scanning............... scanning off
+   [6/7] Stop background apps.................... 8 apps stopped
+   [7/7] Touch response latency.................. long press + multi tap tuned
+  [ OK ] Backup saved: /tmp/ffmo/backup-FAKE1234567890-20260929-023904.json
+  Undo any time: menu 6) Restore, or -Mode Restore
+  Verify
+  ----------------------------------------------------------------------
+  Scanning Android settings (nothing is changed)
+  ----------------------------------------------------------------------
+   [OK] Per-game performance mode          FPS       mode=2,downscaleFactor=0.75
+   [OK] Game resolution downscale          FPS       factor=0.75
+   [OK] Animation scales off               Latency   window=0 transition=0 animator=0
+   [--] AOT compile game for speed         Stutter   on demand (runs each optimize)
+   [OK] Background Wi-Fi scanning          Ping      scan_always=0 network_reco=0
+   [--] Stop background apps               RAM/FPS   on demand
+   [OK] Touch response latency             Aim       long_press=250 multi_press=250
+   [!!] ANGLE GLES driver (experimental)   FPS?      native GLES driver
+   [!!] Restrict heavy bloat apps          FPS       0/7 restricted
+   [!!] Fixed performance mode             FPS       disabled
+   [--] Remove bloat apps                  FPS       opt-in (menu 8)
+   [--] Lower screen resolution            FPS       native (best quality)
+   OPTIMIZATION SCORE: 62%   (5/8 core tweaks optimal)
+  Can be improved:
+     * ANGLE GLES driver (experimental) FPS?      Experimental
+     * Restrict heavy bloat apps        FPS       Moderate
+     * Fixed performance mode           FPS       Moderate
+  Performance after
+  ----------------------------------------------------------------------
+   Temperature : 35.2 C   (cool)
+   Thermal     : NONE (cool)
+   Frames      : 71.9 fps (estimated from Android frame stats)
+   Smoothness  : 3.8 % janky frames
+   SCORE: 0%  ->  62%
+  Free Fire settings that match these tweaks
+  ----------------------------------------------------------------------
+   Graphics   : Smooth  |  High FPS  |  Shadows OFF  |  AA OFF
+   Auto-adjust graphics: OFF   (stops mid-fight quality changes)
+   Audio      : high-quality audio OFF (less CPU, footsteps clearer)
+   Phone      : keep 20-30% battery free of apps, avoid charging while playing
+   Cooling    : remove the case, never play while charging - heat is the
+                number one cause of FPS drops after 10 minutes.
+  Report
+  ----------------------------------------------------------------------
+  [ OK ] Saved: /tmp/ffmo/report-20260929-023905.html
+   Done. Restart Free Fire and enjoy. 
